@@ -202,7 +202,7 @@ All available commands are described in [COMMANDS.md](./COMMANDS.md).
 
 ### 8. License
 
-Code is under the [BSD 2-clause "Simplified" License](./LICENSE.txt).
+Code is under the [BSD 2-clause "Simplified" License](./LICENSE).
 
 ### 9. Donations
 
