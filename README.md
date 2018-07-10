@@ -37,15 +37,15 @@ required: **yes**;
 
 examples:
 ```
-	'servers' => ['tcp://127.0.0.1:8099']
+    'servers' => ['tcp://127.0.0.1:8099']
 
-	'servers' => ['unix://./server.sock']
+    'servers' => ['unix://./server.sock']
 
-	'servers' => [
-		'tcp://127.0.0.1:8099',
-		'tcp://127.0.0.1:8100',
-		'tcp://127.0.0.2:8099'
-	]
+    'servers' => [
+        'tcp://127.0.0.1:8099',
+        'tcp://127.0.0.1:8100',
+        'tcp://127.0.0.2:8099'
+    ]
 ```
 
 name: **domains**;
@@ -57,12 +57,12 @@ required: **no**;
 
 examples:
 ```
-	'domains' => ['localhost:8099']
+    'domains' => ['localhost:8099']
 
-	'domains' => [
-		'ws1.example.com',
-		'ws2.example.com'
-	]
+    'domains' => [
+        'ws1.example.com',
+        'ws2.example.com'
+    ]
 ```
 
 name: **control**;
@@ -73,9 +73,9 @@ required: **yes**;
 
 examples:
 ```
-	'control' => 'unix://./control.sock'
+    'control' => 'unix://./control.sock'
 
-	'control' => 'tcp://127.0.0.1:8098'
+    'control' => 'tcp://127.0.0.1:8098'
 ```
 
 name: **pid**;
@@ -86,9 +86,9 @@ required: **yes**;
 
 examples:
 ```
-	'pid' => './server.pid'
+    'pid' => './server.pid'
 	
-	'pid' => '/path/to/the/pid/wson.pid'
+    'pid' => '/path/to/the/pid/wson.pid'
 ```
 
 name: **secret**;
@@ -102,9 +102,9 @@ examples:
 // don't use these examples!!!
 // generate and use your own passphrase!!!
 
-	'secret' => 'uhD27usxm2F61p6gs4unU12mHUiGrbf6'
+    'secret' => 'uhD27usxm2F61p6gs4unU12mHUiGrbf6'
 
-	'secret' => 'eyZsz5dJDg28oNr385YjG4UQasx7D4q9'
+    'secret' => 'eyZsz5dJDg28oNr385YjG4UQasx7D4q9'
 ```
 
 name: **origins**;
@@ -115,12 +115,12 @@ required: **yes**;
 
 examples:
 ```
-	'origins' => ['http://localhost']
+    'origins' => ['http://localhost']
 
-	'origins' => [
-		'http://first.example.com',
-		'http://second.example.com'
-	]
+    'origins' => [
+        'http://first.example.com',
+        'http://second.example.com'
+    ]
 ```
 
 ### 4. Authorization
