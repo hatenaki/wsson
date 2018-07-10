@@ -132,29 +132,39 @@ mechanism requieres the following list of cookies in the corresponding request
 header:
 
 name: **token**;
+
 description: access token value;
+
 length: const AUTH_TOKEN_LEN (default: 32);
+
 example:
 ```
 token=32febad1f0cf83f38aceb31ad63866c4
 ```
 name: **time**;
+
 description: creation time of the token (produced by *time()* php function);
+
 length: *variable*;
+
 example:
 ```
 time=1531124337
 ```
 name: **digest**;
+
 description: hash digest calculated on the main web server as
 ```
 md5("{$this->secret}{$cookies['token']}{$cookies['time']}")
 ```
+
 length: 32;
+
 example:
 ```
 digest=2556ba17173ee7f4947681e721afc1b3
 ```
+
 If you have the high security requirements, you can replace *md5()*
 or write your own authorization protocol.
 Also you can replace all `'token'` ocurrences in the core class file with
