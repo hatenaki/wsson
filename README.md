@@ -27,10 +27,14 @@ broadcast messaging.
 
 All available configuration parameters are described below.
 
+
 name: **servers**;
+
 description: represents the list of TCP or UDS sockets for websocket
 clients connections;
+
 required: **yes**;
+
 examples:
 ```
 	'servers' => ['tcp://127.0.0.1:8099']
@@ -43,10 +47,14 @@ examples:
 		'tcp://127.0.0.2:8099'
 	]
 ```
+
 name: **domains**;
+
 description: represents the list of domain names associated with sockets
 (in order of **servers**);
+
 required: **no**;
+
 examples:
 ```
 	'domains' => ['localhost:8099']
@@ -56,27 +64,39 @@ examples:
 		'ws2.example.com'
 	]
 ```
+
 name: **control**;
+
 description: defines the control server TCP or UDS socket;
+
 required: **yes**;
+
 examples:
 ```
 	'control' => 'unix://./control.sock'
 
 	'control' => 'tcp://127.0.0.1:8098'
 ```
+
 name: **pid**;
+
 description: defines the path to the process pid file;
+
 required: **yes**;
+
 examples:
 ```
 	'pid' => './server.pid'
 	
 	'pid' => '/path/to/the/pid/wson.pid'
 ```
+
 name: **secret**;
+
 defines the pre-shared server-to-server authorization key;
+
 required: **yes**;
+
 examples:
 ```
 // don't use these examples!!!
@@ -86,9 +106,13 @@ examples:
 
 	'secret' => 'eyZsz5dJDg28oNr385YjG4UQasx7D4q9'
 ```
+
 name: **origins**;
+
 represents the list of allowed origins;
+
 required: **yes**;
+
 examples:
 ```
 	'origins' => ['http://localhost']
@@ -183,4 +207,5 @@ Code is under the [BSD 2-clause "Simplified" License](./LICENSE.txt).
 ### 9. Donations
 
 BTC: 13PyAroLFMaqWxVTHdxBkUJf5wksVadiAa
+
 ETH: 0x8c834ef633c29afdaaa12fe34b6afe3cd9ea8a20
