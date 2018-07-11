@@ -152,6 +152,17 @@ class Wson
             echo date('Y-m-d H:i:s ')."Server is not running\n";
         }
         
+        if ($pid) {
+            if (posix_getpgid($pid) !== false) {
+                $this->error = 'Server already started';
+                return;
+            }
+            if (!unlink($this->pid_file)) {
+                $this->error = 'Unable to unlink pid file';
+                return;
+            }
+        }
+        
         foreach (array_merge($this->server_sockets,
             [$this->control_socket]) as $chk_socket
         ) {
@@ -163,19 +174,6 @@ class Wson
                         return;
                     }
                 }
-            }
-        }
-        
-        if ($action == 'stop') return;
-        
-        if ($pid) {
-            if (posix_getpgid($pid) !== false) {
-                $this->error = 'Server already started';
-                return;
-            }
-            if (!unlink($this->pid_file)) {
-                $this->error = 'Unable to unlink pid file';
-                return;
             }
         }
     }
