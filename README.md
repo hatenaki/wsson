@@ -12,7 +12,7 @@ interconnected socket servers:
 Each of these units manages connections on its own TCP or Unix domain socket.
 The WebSocket endpoint provides connection interactions according to the
 RFC 6455 protocol description. Besides, this unit sets up additional
-authorization protocol based on shared secret with timestamps (see description
+authentication protocol based on shared secret with timestamps (see description
 below). The control logical unit lets users connects to server from external
 applications (incl. other PHP scripts, of course) for realization direct and
 broadcast messaging.
@@ -93,7 +93,7 @@ examples:
 
 name: **secret**;
 
-defines the pre-shared server-to-server authorization key;
+defines the pre-shared server-to-server authentication key;
 
 required: **yes**;
 
@@ -123,9 +123,9 @@ examples:
     ]
 ```
 
-### 4. Authorization
+### 4. Authentication
 
-The authorization procedure is based on short-lifetime tokens which with their
+The authentication procedure is based on short-lifetime tokens which with their
 timestamp signed by hashing with secret pre-shared passphrase. The lifetime
 interval defined by the WS_TOKEN_LIFETIME constant (default: 86400). That
 mechanism requieres the following list of cookies in the corresponding request
@@ -166,9 +166,9 @@ digest=2556ba17173ee7f4947681e721afc1b3
 ```
 
 If you have the high security requirements, you can replace *md5()*
-or write your own authorization protocol.
+or write your own authentication protocol.
 Also you can replace all `'token'` ocurrences in the core class file with
-authorization cookie name used in your system (e.g. `'PHPSESSID'`).
+auth cookie name used in your system (e.g. `'PHPSESSID'`).
 
 ### 5. Customization
 
@@ -201,7 +201,7 @@ All available commands are described in [COMMANDS.md](./COMMANDS.md).
 
 ### 7. Planned features
 
-* Take out the authorization in the separate function.
+* Rewrite and take out the authentication in the separate function.
 * Rewrite the origin check.
 * Add correct http/ws response on buffer overflow before the connection closing.
 * Add "usage" and "hints/troubleshooting" in README.
