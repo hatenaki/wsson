@@ -482,14 +482,7 @@ class Wson
                 }
             }
             
-            if (empty($cookies['token']) ||
-                empty($cookies['digest']) ||
-                !isset($cookies['time']) ||
-                (time() - (int)$cookies['time'] > self::WS_TOKEN_LIFETIME) ||
-                ($cookies['digest'] !== md5(
-                    "{$this->secret}{$cookies['token']}{$cookies['time']}"
-                ))
-            ) {
+            if ($this->authCheck($cookies, $headers)) {
                 $state |= self::CLOSED;
                 $e_buffer->write(
                     "HTTP/1.1 403 Forbidden\r\n"
@@ -977,6 +970,31 @@ class Wson
         if ($offset) {
             $r_buffer = substr($r_buffer, $offset);
         }
+    }
+    
+    /**
+     * authentication with cookies (optional with headers - may be rewrited)
+     * 
+     * @param array $cookies
+     * @param array $headers
+     * @return boolean permission
+     */
+    protected function authCheck(&$cookies, &$headers)
+    {
+        if (
+            empty($cookies['token']) ||
+            empty($cookies['digest']) ||
+            empty($cookies['user']) ||
+            empty($cookies['time'])
+        ) {
+            return false;
+        }
+        if (time() - (int)$cookies['time'] > self::WS_TOKEN_LIFETIME) {
+            return false;
+        }
+        return ($cookies['digest'] === md5(
+        "{$this->secret}{$cookies['user']}{$cookies['token']}{$cookies['time']}"
+        ));
     }
     
     /**

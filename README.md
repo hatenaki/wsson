@@ -139,7 +139,17 @@ length: const AUTH_TOKEN_LEN (default: 32);
 
 example:
 ```
-token=32febad1f0cf83f38aceb31ad63866c4
+token=dfde9d7673e7db8b8637d9ae694910a5
+```
+name: **user**;
+
+description: permanent user ID;
+
+length: *variable*;
+
+example:
+```
+user=44333
 ```
 name: **time**;
 
@@ -149,26 +159,27 @@ length: *variable*;
 
 example:
 ```
-time=1531124337
+time=1531567160
 ```
 name: **digest**;
 
 description: hash digest calculated on the main web server as
 ```
-md5("{$this->secret}{$cookies['token']}{$cookies['time']}")
+md5("{$this->secret}{$cookies['user']}{$cookies['token']}{$cookies['time']}")
 ```
 
 length: 32;
 
 example:
 ```
-digest=2556ba17173ee7f4947681e721afc1b3
+digest=5ea7a30b88ee5a32ed6ad4ae2f9a31d4
 ```
 
-If you have the high security requirements, you can replace *md5()*
-or write your own authentication protocol.
-Also you can replace all `'token'` ocurrences in the core class file with
+Notes:
+* You can replace all `'token'` ocurrences in the core class file with
 auth cookie name used in your system (e.g. `'PHPSESSID'`).
+* Note that the `md5` hash is well resistant to preimage attack.
+* It is possible to override the `authCheck` function.
 
 ### 5. Customization
 
@@ -201,7 +212,6 @@ All available commands are described in [COMMANDS.md](./COMMANDS.md).
 
 ### 7. Planned features
 
-* Rewrite and take out the authentication in the separate function.
 * Rewrite the origin check.
 * Add correct http/ws response on buffer overflow before the connection closing.
 * Add "usage" and "hints/troubleshooting" in README.
