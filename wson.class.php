@@ -292,8 +292,8 @@ class Wson
     public function serverEvent($e_buffer, $mask, $listener_fd)
     {
         $descriptor = $e_buffer->fd;
-        $state =& $this->conn_states[$descriptor];
         if ($mask & \EventBufferEvent::TIMEOUT) {
+            $state =& $this->conn_states[$descriptor];
             if ((~$state) & (self::HANDSHAKE | self::ALIVE | self::READY)) {
                 $mask |= \EventBufferEvent::ERROR;
             } else {
