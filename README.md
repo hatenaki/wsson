@@ -217,6 +217,7 @@ All available commands are described in [COMMANDS.md](./COMMANDS.md).
 * Add "usage" and "hints/troubleshooting" in README.
 * Add status info command in the control protocol.
 * Add reflection for echo status info with `status` CLI argument.
+* Limit connections per user; create IP blacklist (DoS-attack protection).
 * Write the ws**s**on (websocket server core with SSL context).
 * Correct connections close on SIGTERM.
 
