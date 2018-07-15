@@ -701,7 +701,6 @@ class Wson
         // end protocol dependencies
     }
     
-    
     /**
      * authentication with cookies (optional with headers - may be rewrited)
      * 
@@ -725,58 +724,6 @@ class Wson
         return ($cookies['digest'] === md5(
         "{$this->secret}{$cookies['user']}{$cookies['token']}{$cookies['time']}"
         ));
-    }
-    
-    /**
-     * init and start broadcast chain
-     * 
-     * @param string $message
-     * @param boolean $binary frame type
-     */
-    protected function sendBroadcast($message, $binary = false)
-    {
-        $header = $binary ? "\x82" : "\x81";
-        $msg_len = strlen($message);
-        if ($msg_len > 125) {
-            if ($msg_len > 65535) {
-                $header .= "\x7F".pack('J', $msg_len);
-            } else {
-                $header .= "\x7E".pack('n', $msg_len);
-            }
-        } else {
-            $header .= chr($msg_len);
-        }
-        $bcasts =& $this->broadcasts;
-        $tail = count($bcasts);
-        $index = $this->current_bcast + $tail;
-        $bcasts[$index] = "{$header}{$message}";
-        if ($tail) return;
-        
-        $conn_states =& $this->conn_states;
-        $bcast_ptr =& $this->broadcast_ptr;
-        $bcast_ptr = $this->min_conn_descriptor - 1;
-        do
-        {
-            do
-            {
-                $bcast_ptr++;
-            }
-            while (($bcast_ptr <= $this->max_conn_descriptor) &&
-                (!isset($conn_states[$bcast_ptr]) ||
-                    !($conn_states[$bcast_ptr] & self::READY)
-                )
-            );
-            if ($bcast_ptr > $this->max_conn_descriptor) {
-                unset($bcasts[$this->current_bcast++]);
-                $bcast_ptr = $this->min_conn_descriptor - 1;
-            } else {
-                break;
-            }
-        }
-        while (!empty($bcasts));
-        if (!empty($bcasts)) {
-            $this->e_buffers[$bcast_ptr]->write($bcasts[$this->current_bcast]);
-        }
     }
     
     /**
@@ -1049,7 +996,59 @@ class Wson
             $r_buffer = substr($r_buffer, $offset);
         }
     }
-
+    
+    /**
+     * init and start broadcast chain
+     * 
+     * @param string $message
+     * @param boolean $binary frame type
+     */
+    protected function sendBroadcast($message, $binary = false)
+    {
+        $header = $binary ? "\x82" : "\x81";
+        $msg_len = strlen($message);
+        if ($msg_len > 125) {
+            if ($msg_len > 65535) {
+                $header .= "\x7F".pack('J', $msg_len);
+            } else {
+                $header .= "\x7E".pack('n', $msg_len);
+            }
+        } else {
+            $header .= chr($msg_len);
+        }
+        $bcasts =& $this->broadcasts;
+        $tail = count($bcasts);
+        $index = $this->current_bcast + $tail;
+        $bcasts[$index] = "{$header}{$message}";
+        if ($tail) return;
+        
+        $conn_states =& $this->conn_states;
+        $bcast_ptr =& $this->broadcast_ptr;
+        $bcast_ptr = $this->min_conn_descriptor - 1;
+        do
+        {
+            do
+            {
+                $bcast_ptr++;
+            }
+            while (($bcast_ptr <= $this->max_conn_descriptor) &&
+                (!isset($conn_states[$bcast_ptr]) ||
+                    !($conn_states[$bcast_ptr] & self::READY)
+                )
+            );
+            if ($bcast_ptr > $this->max_conn_descriptor) {
+                unset($bcasts[$this->current_bcast++]);
+                $bcast_ptr = $this->min_conn_descriptor - 1;
+            } else {
+                break;
+            }
+        }
+        while (!empty($bcasts));
+        if (!empty($bcasts)) {
+            $this->e_buffers[$bcast_ptr]->write($bcasts[$this->current_bcast]);
+        }
+    }
+    
     /**
      * send direct message to client by associated file descriptor
      * 
