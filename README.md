@@ -212,7 +212,6 @@ All available commands are described in [COMMANDS.md](./COMMANDS.md).
 
 ### 7. Planned features
 
-* Rewrite the origin check.
 * Add correct http/ws response on buffer overflow before the connection closing.
 * Add "usage" and "hints/troubleshooting" in README.
 * Add status info command in the control protocol.

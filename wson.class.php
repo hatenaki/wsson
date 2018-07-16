@@ -508,7 +508,7 @@ class Wson
                 !isset($headers['connection']) ||
                 !in_array('Upgrade', explode(', ', $headers['connection'])) ||
                 !isset($headers['origin']) ||
-                !in_array($headers['origin'], $this->origins) ||
+                !$this->originCheck($headers['origin']) ||
                 empty($headers['sec-websocket-key']) ||
                 !isset($headers['sec-websocket-version']) ||
                 ($headers['sec-websocket-version'] !== '13')
@@ -717,6 +717,17 @@ class Wson
             ($cookies['digest'] != md5("{$this->secret}{$cookies['user']}"
             ."{$cookies['token']}{$cookies['time']}"))
         );
+    }
+    
+    /**
+     * origin check
+     * 
+     * @param string $origin
+     * @return boolean permission
+     */
+    protected function originCheck($origin)
+    {
+        return in_array($origin, $this->origins);
     }
     
     /**
