@@ -404,8 +404,14 @@ class Wson
         while ($extracted && ($len < $buffer_limit));
         
         if ($len == $buffer_limit) {
-            $this->serverEvent(
-                $e_buffer, \EventBufferEvent::ERROR, $listener_fd
+            $state |= self::CLOSED;
+            if ($state & self::HANDSHAKE) {
+                $e_buffer->write("\x88\x11\x03\xF1buffer owerflow");
+                return;
+            }
+            $e_buffer->write(
+                "HTTP/1.1 400 Bad Request (Request Header Too Long)\r\n"
+                ."Connection: close\r\n\r\n"
             );
             return;
         }
