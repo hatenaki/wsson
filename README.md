@@ -212,12 +212,11 @@ All available commands are described in [COMMANDS.md](./COMMANDS.md).
 
 ### 7. Planned features
 
-* Add correct http/ws response on buffer overflow before the connection closing.
-* Add "usage" and "hints/troubleshooting" in README.
-* Add status info command in the control protocol.
-* Add reflection for echo status info with `status` CLI argument.
 * Limit connections per user; create IP blacklist (DoS-attack protection).
 * Write the ws**s**on (websocket server core with SSL context).
+* Add status info command in the control protocol.
+* Add reflection for echo status info with `status` CLI argument.
+* Add "usage" and "hints/troubleshooting" in README.
 * Correct connections close on SIGTERM.
 
 ### 8. License
