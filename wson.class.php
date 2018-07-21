@@ -23,7 +23,6 @@ class Wson
     protected const AUTH_TOKEN_LEN = 32;
     
     protected $error = '';
-    protected $action;
     protected $server_sockets;
     protected $control_socket;
     protected $pid_file;
@@ -75,16 +74,14 @@ class Wson
      * otherwise all connections will be refused
      * 
      * @param array $config initial parameters
-     * @param string $action 'start', 'stop' or 'restart'
      */
-    public function __construct($config, $action = 'start')
+    public function __construct($config)
     {
         if (!extension_loaded('event')) {
             $this->error = 'The Event PECL extension required';
             return;
         }
         
-        $this->action = $action;
         $this->server_sockets =
             empty($config['servers']) ? [''] : $config['servers'];
         $this->control_socket =
@@ -113,69 +110,6 @@ class Wson
                 return;
             }
         }
-        
-        $pid = file_exists($this->pid_file) ?
-            (int)file_get_contents($this->pid_file) : 0;
-        $alive = (posix_getpgid($pid) !== false);
-        if (($action != 'start') && $pid) {
-            if ($alive && !posix_kill($pid, SIGTERM)) {
-                $this->error = 'Unable to send kill signal';
-                return;
-            }
-            if ($alive) {
-                echo date('Y-m-d H:i:s ');
-                echo 'Waiting for process termination (5s max)';
-            }
-            for ($i = 0; ($i < 20) && $alive; $i++) {
-                $alive = (posix_getpgid($pid) !== false);
-                if ($alive) {
-                    usleep(250000);
-                }
-                if ($i % 4 == 3) {
-                    echo '.';
-                }
-            }
-            if ($i) echo "\n";
-            if ($alive) {
-                $this->error = 'Unable to stop server';
-                return;
-            } else {
-                if (!unlink($this->pid_file)) {
-                    $this->error = 'Unable to unlink pid file';
-                    return;
-                } else {
-                    $pid = 0;
-                    echo date('Y-m-d H:i:s ')."Stopped successfully\n";
-                }
-            }
-        } elseif ($action == 'stop') {
-            echo date('Y-m-d H:i:s ')."Server is not running\n";
-        }
-        
-        if ($pid) {
-            if (posix_getpgid($pid) !== false) {
-                $this->error = 'Server already started';
-                return;
-            }
-            if (!unlink($this->pid_file)) {
-                $this->error = 'Unable to unlink pid file';
-                return;
-            }
-        }
-        
-        foreach (array_merge($this->server_sockets,
-            [$this->control_socket]) as $chk_socket
-        ) {
-            if (substr($chk_socket, 0, 7) == 'unix://') {
-                $chk_socket = substr($chk_socket, 7);
-                if (file_exists($chk_socket)) {
-                    if (!unlink($chk_socket)) {
-                        $this->error = "Unable to unlink socket {$chk_socket}";
-                        return;
-                    }
-                }
-            }
-        }
     }
     
     /**
@@ -193,8 +127,14 @@ class Wson
             return $this->error;
         }
         
-        if ($this->action == 'stop') {
-            return '';
+        $pid = file_exists($this->pid_file) ?
+            (int)file_get_contents($this->pid_file) : 0;
+        if ($pid && (posix_getpgid($pid) !== false)) {
+            return 'Server already started';
+        }
+        $error = $this->stop(true);
+        if ($error) {
+            return $error;
         }
         
         if (!file_put_contents($this->pid_file, posix_getpid())) {
@@ -251,6 +191,90 @@ class Wson
         $base->dispatch(); // infinite loop
         
         return $this->error;
+    }
+    
+    /**
+     * stop server if started
+     * 
+     * @param boolean $silent
+     * @return string error (empty, if all is correct)
+     */
+    public function stop($silent = false)
+    {
+        if ($this->error) {
+            return $this->error;
+        }
+        
+        $pid = file_exists($this->pid_file) ?
+            (int)file_get_contents($this->pid_file) : 0;
+        if (!$pid) {
+            return $silent ? '' : 'Server is not running';
+        }
+        
+        $alive = (posix_getpgid($pid) !== false);
+        if ($alive && !posix_kill($pid, SIGTERM)) {
+            return 'Unable to send kill signal';
+        }
+        $alive = (posix_getpgid($pid) !== false);
+        if ($alive) {
+            echo date('Y-m-d H:i:s ');
+            echo 'Waiting for process termination (5s max)';
+        }
+        for ($i = 0; ($i < 20) && $alive; $i++) {
+            $alive = (posix_getpgid($pid) !== false);
+            if ($alive) {
+                usleep(250000);
+            }
+            if ($i % 4 == 3) {
+                echo '.';
+            }
+        }
+        if ($i) echo "\n";
+        if ($alive) {
+            return 'Unable to stop server';
+        }
+        
+        if (!unlink($this->pid_file)) {
+            return 'Unable to unlink pid file';
+        }
+        foreach (array_merge($this->server_sockets,
+            [$this->control_socket]) as $chk_socket
+        ) {
+            if (substr($chk_socket, 0, 7) == 'unix://') {
+                $chk_socket = substr($chk_socket, 7);
+                if (file_exists($chk_socket)) {
+                    if (!unlink($chk_socket)) {
+                        return "Unable to unlink socket {$chk_socket}";
+                    }
+                }
+            }
+        }
+        echo date('Y-m-d H:i:s ')."Stopped successfully\n";
+        return '';
+    }
+    
+    /**
+     * restart server
+     * 
+     * @return string error (empty, if all is correct)
+     */
+    public function restart()
+    {
+        if ($this->error) {
+            return $this->error;
+        }
+        
+        $error = $this->stop(true);
+        if ($error) {
+            return $error;
+        }
+        
+        $error = $this->start();
+        if ($error) {
+            return $error;
+        }
+        
+        return '';
     }
     
     /**

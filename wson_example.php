@@ -15,7 +15,7 @@ $config = [
     'origins' => ['http://localhost', 'file://']
 ];
 
-$action = isset($argv[1]) ? trim($argv[1]) : 'start';
+$action = isset($argv[1]) ? strtolower(trim($argv[1])) : 'start';
 if (!in_array($action, ['start', 'stop', 'restart'])) {
     echo "Usage: {$argv[0]} start|stop|restart\n";
     exit;
@@ -23,8 +23,8 @@ if (!in_array($action, ['start', 'stop', 'restart'])) {
 
 require './wson.class.php';
 
-$server = new Wson($config, $action);
-$error = $server->start();
+$server = new Wson($config);
+$error = $server->$action();
 
 if ($error) {
     echo date('Y-m-d H:i:s ')."$error\n";
