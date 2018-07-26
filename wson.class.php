@@ -454,6 +454,7 @@ class Wson
                     $state |= self::CLOSED;
                     $e_buffer->write(
                         "HTTP/1.1 400 Bad Request (Fragment Too Small)\r\n"
+                        ."Connection: close\r\n\r\n"
                     );
                 }
                 return;
