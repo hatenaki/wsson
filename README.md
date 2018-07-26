@@ -17,7 +17,7 @@ below). The control logical unit lets users connects to server from external
 applications (incl. other PHP scripts, of course) for realization direct and
 broadcast messaging.
 
-### 2. Recomendations and requirements
+### 2. Recommendations and requirements
 
 * PHP 7.1 or higher recommended (developed and tested with version 7.1);
 * Event - PECL extension version 2.3.0 (stable) recommended (the same reason);

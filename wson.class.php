@@ -21,6 +21,8 @@ class Wson
     protected const WS_TOKEN_LIFETIME = 86400;
     protected const ALIVE_INTERVAL = 15;
     protected const AUTH_TOKEN_LEN = 32;
+    protected const MIN_HSK_FRAGMENT = 256;
+    protected const MAX_CONNS_PER_USER = 5;
     
     protected $error = '';
     protected $server_sockets;
@@ -35,7 +37,8 @@ class Wson
     
     protected $e_buffers = [];
     protected $r_buffers = [];
-    protected $relations = [];
+    protected $relations = []; // tokens-descriptors
+    protected $subjections = []; // descriptors-users
     protected $conn_states = [];
     protected $ctrl_states = [];
     protected $locked_dscs = [];
@@ -98,16 +101,15 @@ class Wson
         foreach (array_merge($this->server_sockets,
             [$this->control_socket, $this->pid_file]) as $path
         ) {
-            if ((substr($path, 0, 7) != 'unix://') &&
-                (substr($path, -4) != '.pid')
+            if ((substr($path, 0, 7) == 'unix://') ||
+                (substr($path, -4) == '.pid')
             ) {
-                continue;
-            }
-            $path = str_replace('unix://', '', $path);
-            $path = substr($path, 0, strrpos($path, '/'));
-            if (!file_exists($path) || !is_dir($path)) {
-                $this->error = "Directory {$path} does not exist";
-                return;
+                $path = str_replace('unix://', '', $path);
+                $path = substr($path, 0, strrpos($path, '/'));
+                if (!file_exists($path) || !is_dir($path)) {
+                    $this->error = "Directory {$path} does not exist";
+                    return;
+                }
             }
         }
     }
@@ -299,7 +301,7 @@ class Wson
             [$this, 'serverRead'], [$this, 'serverWrite'],
             [$this, 'serverEvent'], $listener->fd
         );
-        $e_buffer->setTimeouts(1.0, 1.0);
+        $e_buffer->setTimeouts(5.0, 1.0);
         $e_buffer->enable(\Event::READ | \Event::WRITE | \Event::PERSIST);
         $this->e_buffers[$descriptor] = $e_buffer;
         $this->r_buffers[$descriptor] = '';
@@ -333,6 +335,7 @@ class Wson
             unset($this->e_buffers[$descriptor]);
             unset($this->r_buffers[$descriptor]);
             unset($this->conn_states[$descriptor]);
+            unset($this->subjections[$descriptor]);
             $relations =& $this->relations;
             if (($relation = array_search($descriptor, $relations)) !== false) {
                 unset($relations[$relation]);
@@ -359,6 +362,7 @@ class Wson
     {
         $descriptor = $e_buffer->fd;
         if ($this->conn_states[$descriptor] & self::CLOSED) {
+            // if conn isn't hsk'ed - it's bad! Feature is coming soon...
             $this->serverEvent(
                 $e_buffer, \EventBufferEvent::ERROR, $listener_fd
             );
@@ -418,6 +422,7 @@ class Wson
         
         $r_buffer =& $this->r_buffers[$descriptor];
         $len = strlen($r_buffer);
+        $diff_len = $len;
         do
         {
             $data = $e_buffer->read($buffer_limit - $len);
@@ -426,11 +431,12 @@ class Wson
             $len += $extracted;
         }
         while ($extracted && ($len < $buffer_limit));
+        $diff_len = $len - $diff_len;
         
         if ($len == $buffer_limit) {
             $state |= self::CLOSED;
             if ($state & self::HANDSHAKE) {
-                $e_buffer->write("\x88\x11\x03\xF1buffer owerflow");
+                $e_buffer->write("\x88\x11\x03\xF1buffer overflow");
                 return;
             }
             $e_buffer->write(
@@ -443,7 +449,15 @@ class Wson
         // start handshake
         
         if (!($state & self::HANDSHAKE)) {
-            if (substr($r_buffer, -4) !== "\r\n\r\n") return;
+            if (substr($r_buffer, -4) !== "\r\n\r\n") {
+                if ($diff_len < self::MIN_HSK_FRAGMENT) {
+                    $state |= self::CLOSED;
+                    $e_buffer->write(
+                        "HTTP/1.1 400 Bad Request (Fragment Too Small)\r\n"
+                    );
+                }
+                return;
+            }
             $headers = explode("\r\n", $r_buffer, 2);
             $r_buffer = '';
             $start_string = trim($headers[0]);
@@ -551,6 +565,20 @@ class Wson
                 return;
             }
             
+            $users =& $this->subjections;
+            if (count(array_keys($users, $cookies['user'])) ==
+                self::MAX_CONNS_PER_USER
+            ) {
+                echo date('Y-m-d H:i:s ')."User {$cookies['user']} "
+                    ."has presumably violated MAX_CONNS_PER_USER limit\n";
+                $state |= self::CLOSED;
+                $e_buffer->write(
+                    "HTTP/1.1 429 Too Many Requests\r\n"
+                    ."Connection: close\r\n\r\n"
+                );
+                return;
+            }
+            
             $accept = base64_encode(
                 pack('H*', sha1($headers['sec-websocket-key']
                     .'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'))
@@ -565,6 +593,7 @@ class Wson
             );
             $state |= ((int)$cookies['time'] + self::WS_TOKEN_LIFETIME) & ~0x1F;
             $relations[$cookies['token']] = $descriptor;
+            $users[$descriptor] = $cookies['user'];
             $this->onHandshake($e_buffer, $descriptor);
             
             return;
@@ -906,7 +935,7 @@ class Wson
                     $offset += self::AUTH_TOKEN_LEN;
                     $pack_len -= self::AUTH_TOKEN_LEN;
                     if (!$pack_len || !$success) {
-                        if ($confirm) { // (N)ACK ~ it can be user status check
+                        if ($confirm) { // (N)ACK ~ it can be conn status check
                             $e_buffer->write(self::AUTH_TOKEN_LEN
                                 .($success ? 'A' : 'N').$token
                             );
