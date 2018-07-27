@@ -683,7 +683,7 @@ class Wson
                     )[1];
                     $pointer += 4;
                 } else {
-                    this->serverEvent(
+                    $this->serverEvent(
                         $e_buffer, \EventBufferEvent::ERROR, $listener_fd
                     );
                     return;
