@@ -435,6 +435,7 @@ class Wson
         
         if ($len == $buffer_limit) {
             $state |= self::CLOSED;
+            $state &= ~self::READY;
             if ($state & self::HANDSHAKE) {
                 $e_buffer->write("\x88\x11\x03\xF1buffer overflow");
                 return;
@@ -607,6 +608,7 @@ class Wson
             !($state & self::CLOSING)
         ) {
             $state |= self::CLOSING;
+            $state &= ~self::READY;
             $e_buffer->write("\x88\x09\x03\xE8expired");
         }
         
@@ -680,6 +682,11 @@ class Wson
                         substr($r_buffer, $pointer, 4)
                     )[1];
                     $pointer += 4;
+                } else {
+                    this->serverEvent(
+                        $e_buffer, \EventBufferEvent::ERROR, $listener_fd
+                    );
+                    return;
                 }
                 $appendix_len = (4 - ($payload_len % 4)) % 4;
                 $appendix = str_repeat("\0", $appendix_len);
